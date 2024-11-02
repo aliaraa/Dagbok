@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import CategoryBox from '@/components/CategoryBox';
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { categoryStyle } from '@/components/CategoryStyle';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 const Categories = ({navigation}) => {
@@ -20,8 +21,8 @@ const Categories = ({navigation}) => {
     const loadTasks = async () => {
       const newTasksPerCategory = {};
       for (const category of categories) {
-        const tasks = await loadTasksForCategory(category);
-        newTasksPerCategory[category] = tasks;
+        const tasks = await loadTasksForCategory(category.id);
+        newTasksPerCategory[category.id] = tasks;
       }
       setTasksPerCategory(newTasksPerCategory);
     };
@@ -31,7 +32,22 @@ const Categories = ({navigation}) => {
     }
   }, [categories]);
 
-  async function saveCategory(addCategories:string) {
+  useFocusEffect(
+    React.useCallback(() => {
+        const loadTasks = async () => {
+            const newTasksPerCategory = {};
+            for (const category of categories) {
+                const tasks = await loadTasksForCategory(category.id);
+                newTasksPerCategory[category.id] = tasks;
+            }
+            setTasksPerCategory(newTasksPerCategory);
+        };
+
+        loadTasks();
+    }, [categories])
+);
+
+  async function saveCategory(addCategories) {
     await AsyncStorage.setItem('myCategory', JSON.stringify(addCategories));
   };
 
@@ -45,37 +61,40 @@ const Categories = ({navigation}) => {
 
   const addCategory = () => {
     if (categoryInput.trim()){
-      const newCategories = ([...categories, categoryInput]);
+      const newCategory = {
+        id: Date.now().toString(),
+        name: categoryInput
+      };
+      const newCategories = ([...categories, newCategory]);
       setCategories(newCategories);
       setCategoryInput('');
       saveCategory(newCategories);
     }
   };
 
-  async function deleteCategories(deletedCategory) {
+  async function deleteCategories(categoryId) {
     Alert.alert(
       "Confirm Deletion",
-      `Are you sure you want to delete the category "${deletedCategory}" and all its tasks?`,
+      `Are you sure you want to delete this category and all its tasks?`,
       [
         {
           text: "Cancel",
-          onPress: () => console.log("Deletion canceled"),
+          
           style: "cancel"
         },
         {
           text: "Delete",
           onPress: async () => {
-            const deleteCategory = categories.filter(category => category !== deletedCategory);
+            const deleteCategory = categories.filter(category => category.id !== categoryId);
             setCategories(deleteCategory);
             await saveCategory(deleteCategory);
   
-            await AsyncStorage.removeItem(`myNotes_${deletedCategory}`);
+            await AsyncStorage.removeItem(`myNotes_${categoryId}`);
   
             const newTasksPerCategory = { ...tasksPerCategory };
-            delete newTasksPerCategory[deletedCategory];
+            delete newTasksPerCategory[categoryId];
             setTasksPerCategory(newTasksPerCategory);
             
-            console.log(`Category "${deletedCategory}" and its tasks were deleted`);
           },
           style: "destructive"  
         }
@@ -85,24 +104,25 @@ const Categories = ({navigation}) => {
   }
   
 
-  async function deleteNotes(category, deletedTask) {
-    const updatedTasks = tasksPerCategory[category].filter(task => task !== deletedTask);
+  async function deleteNotes(categoryId, deletedTask) {
+    const updatedTasks = tasksPerCategory[categoryId].filter(task => task.id !== deletedTask.id);
     setTasksPerCategory(prev => ({
       ...prev,
-      [category]: updatedTasks,
+      [categoryId]: updatedTasks,
     }));
-    await AsyncStorage.setItem(`myNotes_${category}`, JSON.stringify(updatedTasks));
+    await AsyncStorage.setItem(`myNotes_${categoryId}`, JSON.stringify(updatedTasks));
   }
 
-  async function loadTasksForCategory(category) {
-    const loadedNotes = await AsyncStorage.getItem(`myNotes_${category}`);
+  async function loadTasksForCategory(categoryId) {
+    const loadedNotes = await AsyncStorage.getItem(`myNotes_${categoryId}`);
     return loadedNotes ? JSON.parse(loadedNotes) : [];
   };
 
-  const updateTasksInCategory = (category, tasks) => {
+  const updateTasksInCategory = (categoryId, tasks) => {
     setTasksPerCategory(prev => ({
-      ...prev, [category]: tasks,
+      ...prev, [categoryId]: tasks,
     }));
+    
   };
 
   return (
@@ -118,7 +138,7 @@ const Categories = ({navigation}) => {
         <TouchableOpacity 
           style = {categoryStyle.addButton}
           onPress = {addCategory} >
-          <Text>add</Text>
+          <Text style = {categoryStyle.addButtonText}>+</Text>
         </TouchableOpacity>
       </View>
       
@@ -129,20 +149,20 @@ const Categories = ({navigation}) => {
         style = {categoryStyle.flatList}
         numColumns = {2}
         data = {categories}
-        keyExtractor = {(item, index) => index.toString()}
+        keyExtractor = {(item) => item.id}
         renderItem = {({item}) => {
-          const tasks = tasksPerCategory[item] || [];
+          const tasks = tasksPerCategory[item.id] || [];
           return(
           <View style = {categoryStyle.renderItem}>
             <CategoryBox 
               category = {item} 
-              tasks = {tasks}
-              deleteTask={deleteNotes}
-              updateTasks = {updateTasksInCategory}
+              task = {tasks}
+              deleteTask={(deletedTask) => deleteNotes(item.id, deletedTask)}
+              updateTasks = {(task) => updateTasksInCategory(item.id, task)}
               navigation = {navigation} /> 
             <TouchableOpacity 
               style = {categoryStyle.deleteButton}
-              onPress = {() => deleteCategories(item)} >
+              onPress = {() => deleteCategories(item.id)} >
               <Text style = {categoryStyle.deleButtonText}>Delete</Text>
             </TouchableOpacity>
           </View>

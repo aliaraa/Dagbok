@@ -1,25 +1,31 @@
 import { View, Text, TouchableOpacity } from 'react-native'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { categoryStyle } from './CategoryStyle'
 
 
-const CategoryBox = ({tasks, category, navigation, updateTasks}) => {
+const CategoryBox = ({task, category, navigation, updateTasks}) => {
 
-
+  const taskList = Array.isArray(task) ? task : [];
 
   return (
     <TouchableOpacity 
-      onPress={()=> navigation.navigate('Notes', {category, updateTasks})}
+      onPress={()=> navigation.navigate('Notes', {
+        category: category,
+        updateTasks,
+      })}
       style={categoryStyle.boxStyle}>
 
-      <Text style = {categoryStyle.boxTitle}>{category}</Text>
+      <Text style = {categoryStyle.boxTitle}>{category.name}</Text>
+
+      <View style = {categoryStyle.divider}></View>
+
       <View style={{ paddingVertical: 5 }}>
-        {tasks.length > 0 ? (
-          tasks.map((task, index) => (
-            <Text key={index} style={{ marginVertical: 2 }}> - {task}</Text>
+        {task.length > 0 ? (
+          taskList.map((task, id) => (
+            <Text key={id}  style = {categoryStyle.boxText}>{task.text}</Text>
           ))
         ) : (
-          <Text>Its empty</Text>
+          <Text style = {categoryStyle.boxText}>Its empty</Text>
         )}
       </View>
     </TouchableOpacity>

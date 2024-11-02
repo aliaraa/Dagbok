@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import NoteBox from '@/components/NoteBox';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { noteStyle } from '@/components/NoteStyle';
 
 const Notes = ({route, navigation}) => {
 
@@ -15,12 +16,12 @@ const Notes = ({route, navigation}) => {
     loadNotes()
   }, []);
 
-  async function saveNotes(addMyNotes:string) {
-    await AsyncStorage.setItem(`myNotes_${category}`, JSON.stringify(addMyNotes));
+  async function saveNotes(addMyNotes) {
+    await AsyncStorage.setItem(`myNotes_${category.id}`, JSON.stringify(addMyNotes));
   }
 
   async function loadNotes() {
-    const loadedNotes = await AsyncStorage.getItem(`myNotes_${category}`)
+    const loadedNotes = await AsyncStorage.getItem(`myNotes_${category.id}`)
 
     if (loadedNotes !== null) {
       setTasks(JSON.parse(loadedNotes));
@@ -29,53 +30,59 @@ const Notes = ({route, navigation}) => {
 
   const addNotes = () => {
     if (noteInput.trim()){
-      const newTasks = ([...tasks, noteInput]);
+      const newTask = {
+        id: Date.now().toString(),
+        text: noteInput,
+      };
+      const newTasks = ([...tasks, newTask]);
       setTasks(newTasks);
       setNoteInput('');
       saveNotes(newTasks); 
-      updateTasks(category, newTasks);
+      updateTasks(category.id, newTasks);
     }
   };
 
   async function deleteNotes(deletedNotes) {
-    const removeNote = tasks.filter(task => task !== deletedNotes);
+    const removeNote = tasks.filter(task => task.id !== deletedNotes);
     setTasks(removeNote);
     saveNotes(removeNote);
-    updateTasks(category, removeNote);
+    updateTasks(category.id, removeNote);
   }
 
   return (
-    <SafeAreaView>
+    <SafeAreaView> 
 
-      <Text>Category: {category}</Text>
+      <Text style = {noteStyle.categoryText}>{category.name}</Text>
 
-      <View style = {{flexDirection:'row', 
-                      alignContent:'center'}}> 
-        <TextInput style = {{width: '80%',
-                            borderWidth: 1}}
+      <View style = {noteStyle.divider}></View>
+
+      <View style = {noteStyle.textInputView}> 
+        <TextInput style = {noteStyle.textInput}
           onChangeText = {setNoteInput}
           placeholder = 'Write here'
           value = {noteInput}/>
       
-      <TouchableOpacity 
-        onPress = {addNotes}>
-        <Text>ADD</Text>
-      </TouchableOpacity>
-
+        <TouchableOpacity 
+          style = {noteStyle.addButton}
+          onPress = {addNotes}>
+          <Text style = {noteStyle.addButtonText}>+</Text>
+        </TouchableOpacity>
       </View>
 
       <View>
         <FlatList
           data = {tasks}
-          keyExtractor = {(item, index) => index.toString()}
+          keyExtractor = {(item) => item.id}
           renderItem = {({item}) => (
-            <View>
+            <View style ={noteStyle.tasktView}>
               <NoteBox 
-                tasks = {item} 
+                task = {item} 
                 navigation = {navigation} />
                 
-              <TouchableOpacity onPress={() => deleteNotes(item)}>
-                <Text>Delete</Text>
+              <TouchableOpacity 
+                style = {noteStyle.deleteButton}
+                onPress={() => deleteNotes(item.id)}>
+                <Text style = {noteStyle.deleButtonText}>Delete</Text>
               </TouchableOpacity>
             </View>
              )}

@@ -3,7 +3,13 @@ import { Dimensions, StyleSheet } from "react-native";
 const windowWidth = Dimensions.get('window').width;
 const windowHieght = Dimensions.get('window').height;
 
-export const categoryStyle = StyleSheet.create({
+export const noteStyle = StyleSheet.create({
+
+    categoryText: {
+        fontSize: 32,
+        marginLeft: 10,
+        fontWeight: '500',
+    },
 
     textInput: {
         borderWidth: 0.6,
@@ -15,17 +21,22 @@ export const categoryStyle = StyleSheet.create({
 
     textInputView: {
         flexDirection: 'row',
-        margin: 10,
+        marginLeft: 10,
+        marginBottom: 8,
+        marginTop: 5,
     },
-
+    tasktView: {
+        flexDirection: 'row',
+        marginLeft: 5,
+    },
     addButton: {
         borderWidth: 0.6,
         borderRadius: 4,
         marginLeft: 10,
         height: 35,
         width: windowWidth * 0.1,
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
     },
 
     addButtonText: {
@@ -37,13 +48,19 @@ export const categoryStyle = StyleSheet.create({
         borderWidth: 0.3,
         borderRadius: 4,
         marginTop: 5,
-        height: 25,
+        marginLeft: 10,
+        width: windowWidth * 0.12,
+        height: windowHieght * 0.04,
+        alignItems: 'center',
+        justifyContent: 'center',
     }, 
 
     deleButtonText: {
-        padding: 3,
-        alignSelf: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 5,
         color: 'red',
+        fontSize: 12,
+        textAlign: 'center',
     }, 
 
     flatList: {
@@ -58,18 +75,19 @@ export const categoryStyle = StyleSheet.create({
     },
 
     boxStyle: {
-        width: windowWidth * 0.45,
-        height: windowHieght * 0.25,
+        width: windowWidth * 0.8,
+        height: windowHieght * 0.04,
         borderWidth: 0.4,
         borderRadius: 4,
-        flexDirection: 'column',   
+        marginTop: 5, 
+        marginLeft: 5,
+        justifyContent: 'center',
+        
     },
 
     boxTitle: {
-        alignSelf: 'center',
+        textAlign: 'center',
         paddingTop: 10,
-        fontSize: 18,
-        fontWeight: '500',
     },
 
     divider: {
@@ -77,9 +95,5 @@ export const categoryStyle = StyleSheet.create({
         backgroundColor: '#ccc',
         marginVertical: 10,
         marginHorizontal: 10
-    },
-
-    boxText: {
-        marginLeft: 10,
     },
 })
